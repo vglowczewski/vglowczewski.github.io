@@ -3,7 +3,6 @@ const CONTACT = {
   email: "vanessaglowczewski@gmail.com",
   linkedin: "https://www.linkedin.com/in/vanessa-glowczewski/",
   github: "https://github.com/vglowczewski/",
-  instagram: "https://www.instagram.com/nibblingnessa/",
   notion: "https://app.notion.com/p/Vanessa-Glowczewski-4079a6324ded8008bd41fe78583d4305",
 };
 

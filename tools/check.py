@@ -113,7 +113,6 @@ class SiteChecks(unittest.TestCase):
             "email": "mailto:vanessaglowczewski@gmail.com",
             "linkedin": "https://www.linkedin.com/in/vanessa-glowczewski/",
             "github": "https://github.com/vglowczewski/",
-            "instagram": "https://www.instagram.com/nibblingnessa/",
         }
         contact = (ROOT / "contact.html").read_text(encoding="utf-8")
         links = {attrs["data-contact"]: attrs.get("href") for tag, attrs in Document(contact).elements if tag == "a" and "data-contact" in attrs}
