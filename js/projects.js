@@ -25,16 +25,21 @@ function projectCard(project, index) {
     img.decoding = "async";
     thumb.append(img);
   } else {
-    const placeholder = node("span", "project-placeholder", project.emoji);
+    thumb.classList.add("is-placeholder");
+    const placeholder = node("span", "project-placeholder");
     placeholder.setAttribute("aria-hidden", "true");
     thumb.append(placeholder);
   }
   const info = node("div", "project-info");
   const meta = node("div", "project-meta");
   meta.append(node("span", "label", `PROJECT / ${String(index + 1).padStart(2, "0")}`));
-  const emoji = node("span", "", project.emoji);
-  emoji.setAttribute("aria-hidden", "true");
-  meta.append(emoji);
+  const graphic = node("img", "project-graphic");
+  graphic.src = new URL(project.graphic, root);
+  graphic.alt = "";
+  graphic.width = 48;
+  graphic.height = 48;
+  graphic.setAttribute("aria-hidden", "true");
+  meta.append(graphic);
   const heading = node("h3");
   const link = node("a", "", project.title);
   link.href = new URL(`projects/${encodeURIComponent(project.slug)}.html`, root);
@@ -84,8 +89,8 @@ async function loadProjects() {
   } catch {
     grid.setAttribute("aria-busy", "false");
     const error = node("p", "load-error", "Projects could not load. Please try again, or visit ");
-    const link = node("a", "", "my Notion portfolio");
-    link.href = "https://app.notion.com/p/Vanessa-Glowczewski-4079a6324ded8008bd41fe78583d4305";
+    const link = node("a", "", "the contact page");
+    link.href = new URL("contact.html", root);
     error.append(link, document.createTextNode(". If you opened a file directly, please use a local server (see README)."));
     grid.replaceChildren(error);
     if (status) status.textContent = "Project data unavailable.";

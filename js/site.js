@@ -1,16 +1,9 @@
-/* Public contact details. Keep contact.html's no-JavaScript links in sync. */
+/* Public contact details. Keep the HTML fallback links in sync. */
 const CONTACT = {
   email: "vanessaglowczewski@gmail.com",
   linkedin: "https://www.linkedin.com/in/vanessa-glowczewski/",
   github: "https://github.com/vglowczewski/",
-  notion: "https://app.notion.com/p/Vanessa-Glowczewski-4079a6324ded8008bd41fe78583d4305",
 };
-
-/* Section emojis live here; project emojis live in data/projects.json. */
-const EMOJI = { featured: "📌", about: "👋", projects: "🗂️", contact: "✉️" };
-document.querySelectorAll("[data-emoji]").forEach((element) => {
-  element.textContent = EMOJI[element.dataset.emoji] || "";
-});
 
 document.querySelectorAll("[data-contact]").forEach((element) => {
   const kind = element.dataset.contact;

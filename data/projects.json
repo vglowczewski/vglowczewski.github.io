@@ -2,7 +2,7 @@
   {
     "slug": "snackspot",
     "title": "SnackSpot",
-    "emoji": "🍿",
+    "graphic": "assets/icons/popcorn.svg",
     "tags": ["Product", "Case Study"],
     "summary": "A direct-to-consumer snack box company I founded, with $20K+ in sales and a 57% returning customer rate.",
     "year": "",
@@ -11,8 +11,7 @@
     "approach": "I founded and ran the company end to end, built the e-commerce storefront, and set the SEO strategy to bring in customers through search.\n\nI developed six boxes for different customers and occasions: Classic, Canadian, Office, Student, Gluten-Free, and Wellness. The Canadian box responded to interest in supporting locally made products. The Office box served company orders around holidays and large events.\n\nWhen offices asked to add their own logos or stickers, I made the boxes customizable. Boxes contained 25 to 50 items, priced from $29.99 to $44.99 CAD.",
     "outcome": "SnackSpot generated $20K+ in sales since the e-commerce site opened, with a 57% returning customer rate. The Office box accounted for over 75% of site orders.\n\nCustomer requests showed me how customization could turn a standard product into one that fits a group. Office orders followed holidays and events, so I learned to think about demand by occasion, not just by customer.\n\nIf I restarted, I would launch with office kits first, keep the variety inside each box, and begin outreach with local offices. I would also explore seasonal bundles with custom logos and volume pricing to make larger orders and yearly reorders easier.",
     "links": [
-      {"label": "Visit SnackSpot", "url": "https://snackspot.ca/"},
-      {"label": "Original case study on Notion", "url": "https://vanessa-glowczewski.notion.site/SnackSpot-4079a6324ded80cc8a95cb2e563eb870"}
+      {"label": "Visit SnackSpot", "url": "https://snackspot.ca/"}
     ],
     "images": [
       {"src": "assets/images/snackspot-store.webp", "alt": "SnackSpot storefront with a popcorn hero photo and a Shop all button.", "caption": "The SnackSpot e-commerce storefront I built.", "width": 1422, "height": 606},
@@ -22,7 +21,7 @@
   {
     "slug": "beli-teardown",
     "title": "Beli teardown",
-    "emoji": "🍝",
+    "graphic": "assets/icons/fork-plate.svg",
     "tags": ["Case Study", "Product"],
     "summary": "An independent product analysis proposing “Diner Party,” a shared space for friends to choose where to eat.",
     "year": "",
@@ -31,9 +30,7 @@
     "problem": "Beli helps people remember and rank restaurants, but choosing where to eat with friends still happens in a group chat. In my own use, overlapping bookmarks were useful, yet acting on them meant messaging friends separately.\n\nI also noticed that batches of rankings could crowd the feed, getting directions required another app, and picking one favorite dish did not capture everything I enjoyed.",
     "approach": "I proposed Diner Party: a group brings together its members’ bookmarks and rankings, sees overlaps, and votes on where to go. My mobile mockups follow three steps: choose the guest list, choose a date, and pick a place. I also created a web mockup.\n\nSmaller supporting changes would add an Open in Maps link and bundle multiple posts from the same person.\n\nA secondary concept extends relative ranking to dishes within a restaurant. It would be optional and offered after the restaurant is ranked, so logging stays lightweight.",
     "outcome": "This is a product proposal, not a launched feature or a measured experiment.\n\nI would measure the share of Diner Parties that end with a place chosen and later logged. Supporting measures would include invites, new users joining through an invite, rankings after group meals, and logs with at least two dishes ranked.\n\nThe key tradeoffs are privacy when sharing bookmarks, a more complex interface, and notification fatigue. I would watch privacy complaints, notification opt-outs, time to complete a log, feed engagement, and logging quality.",
-    "links": [
-      {"label": "Full product analysis on Notion", "url": "https://vanessa-glowczewski.notion.site/Beli-Product-Case-4079a6324ded80968c5cc2c52251ad93"}
-    ],
+    "links": [],
     "images": [
       {"src": "assets/images/beli-diner-party-web.webp", "alt": "Diner Party web concept showing a guest list with friend selection and shared bookmarks.", "caption": "My independent Diner Party web mockup, not an official Beli screen.", "width": 1407, "height": 860},
       {"src": "assets/images/beli-diner-party-mobile-1.webp", "alt": "Diner Party mobile concept, step one: select friends for the guest list.", "caption": "1. Choose the guest list.", "width": 412, "height": 827},
@@ -44,7 +41,7 @@
   {
     "slug": "classpass-teardown",
     "title": "ClassPass teardown",
-    "emoji": "🎟️",
+    "graphic": "assets/icons/ticket.svg",
     "tags": ["Case Study", "Product"],
     "summary": "An independent product analysis exploring clearer credit pricing and better ways to use a remaining ClassPass balance.",
     "year": "",
@@ -53,9 +50,7 @@
     "problem": "ClassPass gave me flexibility to try different studios while staying in Toronto for a few months. Its trial, class filters, and short-term flexibility worked well for me, but unpredictable credit costs made planning harder.\n\nIn my experience, classes I liked could rise in credits until the savings over a drop-in class felt small. It was also unclear how to spend a small remaining balance, and reviews were difficult to filter by instructor and class combination.",
     "approach": "I proposed credit clarity: show a class’s typical credit range and a short explanation when its price is higher than usual, such as a popular time slot.\n\nA use-your-last-credits suggestion would surface classes or items that fit the remaining balance before credits expire.\n\nI also considered a weekly planner and a membership bundle for a small group of higher-priced studios. The main proposal focuses on helping members understand pricing and use the plan they already pay for.",
     "outcome": "This is an independent proposal. I have not measured a change in retention or credit use.\n\nI would track the share of members who use most of their credits before expiry, supported by rebooking rates and support contacts about credit pricing.\n\nThe main tradeoff is balancing member trust with studios’ ability to respond to demand. I would guard against cluttered search results and monitor class fill rates, studio revenue, and member cancellations.",
-    "links": [
-      {"label": "Full product analysis on Notion", "url": "https://vanessa-glowczewski.notion.site/ClassPass-Product-Case-4079a6324ded8058bbdfec6310b70a7a"}
-    ],
+    "links": [],
     "images": [
       {"src": "assets/images/classpass-discovery.webp", "alt": "ClassPass discovery map of Toronto studios with time, distance, and availability filters.", "caption": "The existing ClassPass discovery experience, shown as context for my analysis.", "width": 1206, "height": 989}
     ]
@@ -63,7 +58,7 @@
   {
     "slug": "restaurant-alternatives",
     "title": "Restaurant alternatives",
-    "emoji": "🍽️",
+    "graphic": "assets/icons/map-pin.svg",
     "tags": ["Coded", "Product"],
     "summary": "A team-built AI analytics tool that finds comparable restaurants using extracted review data.",
     "year": "",

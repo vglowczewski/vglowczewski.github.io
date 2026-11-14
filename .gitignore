@@ -4,3 +4,7 @@ __pycache__/
 .DS_Store
 Thumbs.db
 .checks/
+tools/design-review.html
+tools/screenshots/
+tools/source/
+tools/.venv/
