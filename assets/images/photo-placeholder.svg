@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="700" viewBox="0 0 600 700" fill="none">
+  <defs><pattern id="dots" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.7" fill="#2F4BCB" opacity=".5"/></pattern></defs>
+  <path fill="#CFE3F7" d="M0 0h600v700H0z"/><circle cx="300" cy="290" r="212" fill="url(#dots)"/><path d="M112 620v-64a188 188 0 0 1 376 0v64Z" fill="#F7FAFD"/><circle cx="300" cy="282" r="100" fill="#F7FAFD"/><path d="m458 112 7 22 23 7-23 7-7 23-7-23-23-7 23-7Z" fill="#D93F22"/><text x="300" y="661" text-anchor="middle" fill="#1C2233" font-family="Arial,sans-serif" font-size="13" letter-spacing="3">YOUR PHOTO GOES HERE</text>
+</svg>
