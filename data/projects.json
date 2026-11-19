@@ -2,7 +2,7 @@
   {
     "slug": "snackspot",
     "title": "SnackSpot",
-    "graphic": "assets/icons/popcorn.svg",
+    "graphic": "",
     "tags": ["Product", "Case Study"],
     "summary": "A direct-to-consumer snack box company I founded, with $20K+ in sales and a 57% returning customer rate.",
     "year": "",
@@ -21,7 +21,7 @@
   {
     "slug": "beli-teardown",
     "title": "Beli teardown",
-    "graphic": "assets/icons/fork-plate.svg",
+    "graphic": "",
     "tags": ["Case Study", "Product"],
     "summary": "An independent product analysis proposing “Diner Party,” a shared space for friends to choose where to eat.",
     "year": "",
@@ -41,7 +41,7 @@
   {
     "slug": "classpass-teardown",
     "title": "ClassPass teardown",
-    "graphic": "assets/icons/ticket.svg",
+    "graphic": "",
     "tags": ["Case Study", "Product"],
     "summary": "An independent product analysis exploring clearer credit pricing and better ways to use a remaining ClassPass balance.",
     "year": "",
@@ -58,7 +58,7 @@
   {
     "slug": "restaurant-alternatives",
     "title": "Restaurant alternatives",
-    "graphic": "assets/icons/map-pin.svg",
+    "graphic": "",
     "tags": ["Coded", "Product"],
     "summary": "A team-built AI analytics tool that finds comparable restaurants using extracted review data.",
     "year": "",

@@ -6,12 +6,13 @@ Built with plain HTML, CSS, and vanilla JavaScript. No frameworks or build step.
 
 ## Structure
 
-- `index.html`: home, About me, featured projects, Off the clock, and contact strip
+- `index.html`: home, About me, project interests, Off the clock, and contact strip
 - `experience.html`: experience, leadership and involvement, and education
 - `projects.html`, `contact.html`: all projects and contact details
+- `gallery.html`, `data/gallery.json`: food and travel photos, captions, and focus positions
 - `data/projects.json`: project content
 - `css/` and `js/`: styles and scripts
-- `assets/`: images and icons
+- `assets/`: images and film textures
 - `tools/`: scripts that generate project pages and run checks
 
 ## Local preview and maintenance
@@ -26,26 +27,34 @@ py tools/generate.py
 py tools/check.py
 ```
 
-The home rotates two-color computer, coffee, and planet photo prints on a flat
-halftone disc. CSS loops eight-second holds with 0.35-second crossfades.
-Reduced-motion preferences show only the static computer, without overlays.
-Shared retro icons live in `assets/icons/`; project icons use the `graphic` field.
+The film-inspired interface uses Instrument Serif and Inter. Grayscale object
+cutouts form the hero; reduced-motion preferences make the composition static.
 Contact links use `CONTACT` in `js/site.js`; keep HTML fallback links in sync.
 
-`tools/make_halftone.py` is an optional, offline Pillow/NumPy tool. Its setup and
-commands are in its docstring. Keep originals in ignored `tools/source/`, and
-install image libraries only in ignored `tools/.venv/`. Neither the site nor
-`tools/generate.py` needs them. Prints are opaque, lossless WebP, exactly cobalt
-and paper. `tools/hero-prints.json` records actual crop and overlay geometry.
-The computer bezel mark is repaired before screening. Do not publish originals.
+Offline image tools are `tools/process_objects.py` and `tools/make_gallery.py`.
+Use Pillow/NumPy only in ignored `tools/.venv/`; the site and generator do not
+need them. Keep originals in ignored `tools/source/`. The gallery tool searches
+`tools/source/gallery/` recursively, strips all metadata, preserves edited JSON
+entries, adds new photos, and reports removed sources without deleting entries.
+`tools/gallery-exclusions.json` lists deliberately removed gallery filenames so
+they are not reimported; original photos remain untouched in `tools/source/`.
+Run the gallery tool, then regenerate after adding photos. Change
+`--gallery-grayscale` in `css/styles.css` from `0` to `1` for monochrome photos.
 
-The checks reject pictographic Unicode characters and colors outside the print
+The checks reject pictographic Unicode characters and colors outside the interface
 palette, including SVG assets and embedded SVG data. They also check content,
 navigation, image metadata, and generation.
 
 `tools/design-review.html` is a local-only, ignored artwork and type sheet.
 Open `/tools/design-review.html` on the preview server. Screenshot attempts are
 saved under the ignored `tools/screenshots/` directory when capture is available.
+
+`tools/social-preview.html` is the 1200×630 social-card source.
+`tools/render_social.py`, run with the local image-tool environment and a supplied
+`AGENT_BROWSER_CDP` endpoint, captures its actual HTML with the loaded site fonts
+and embeds Instrument Serif glyphs in the favicon. The attached browser's fixed
+viewport is handled with native, unscaled screenshot tiles. A blocked capture
+uses an explicitly reported browser-canvas fallback, never labelled a screenshot.
 
 ---
 

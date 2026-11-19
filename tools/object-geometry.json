@@ -1,0 +1,56 @@
+{
+  "laptop": {
+    "width": 850,
+    "height": 731,
+    "center_percent": [
+      49.8824,
+      50.0684
+    ],
+    "background_removed": "white"
+  },
+  "coffee": {
+    "width": 543,
+    "height": 520,
+    "center_percent": [
+      50.2762,
+      49.9038
+    ],
+    "background_removed": "white"
+  },
+  "camera": {
+    "width": 448,
+    "height": 362,
+    "center_percent": [
+      50.0,
+      50.0
+    ],
+    "background_removed": "white"
+  },
+  "stamp": {
+    "width": 357,
+    "height": 556,
+    "center_percent": [
+      50.0,
+      50.0
+    ],
+    "background_removed": "white"
+  },
+  "saturn": {
+    "width": 558,
+    "height": 221,
+    "center_percent": [
+      50.1792,
+      50.0
+    ],
+    "background_removed": null
+  },
+  "moon": {
+    "width": 248,
+    "height": 248,
+    "center_percent": [
+      49.5968,
+      50.6048
+    ],
+    "background_removed": null
+  }
+}

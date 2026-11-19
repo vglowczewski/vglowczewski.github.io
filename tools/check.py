@@ -19,9 +19,10 @@ from urllib.parse import unquote, urlsplit
 import xml.etree.ElementTree as ET
 
 import generate
+from media import webp_info
 
 ROOT = Path(__file__).resolve().parents[1]
-PALETTE = {"#2F4BCB", "#1C2A5A", "#CFE3F7", "#F4F2EE", "#FFFFFF", "#D93F22"}
+PALETTE = {"#0B0B0B", "#121212", "#1A1A1A", "#2A2A2A", "#8C8C8C", "#BDB8AE", "#D8D1C5", "#F2EEE6", "#FFFFFF"}
 SOURCE_TYPES = {".html", ".js", ".json", ".css", ".svg"}
 COLOR_ATTRIBUTES = {"fill", "stroke", "color", "stop-color", "flood-color", "lighting-color"}
 
@@ -172,67 +173,155 @@ def plain_text(markup):
 
 
 class SiteChecks(unittest.TestCase):
-    def test_photo_hero(self):
+    def test_film_hero(self):
         home = (ROOT / "index.html").read_text(encoding="utf-8")
         art = re.search(r'<div class="hero-art".*?(?=\s*<div class="hero-bottom")', home, re.S)[0]
         doc = Document(art)
         self.assertEqual(doc.errors, [])
         self.assertEqual(doc.elements[0][1]["role"], "img")
-        self.assertEqual(doc.elements[0][1]["aria-label"], "Halftone photos: a computer, a cup of coffee, and a ringed planet")
-        self.assertEqual([a["src"] for t, a in doc.elements if t == "img" and a["src"].startswith("assets/images/hero-")], [
-            "assets/images/hero-computer.webp", "assets/images/hero-coffee.webp", "assets/images/hero-planet.webp",
-        ])
+        self.assertEqual([a["src"].split("/")[-1] for t, a in doc.elements if t == "img"],
+                         ["saturn.webp", "moon.webp", "coffee.webp", "laptop.webp"])
         self.assertNotIn("<button", art)
-        self.assertNotIn("assets/stickers/", home)
-        css = (ROOT / "css/styles.css").read_text(encoding="utf-8")
-        self.assertIn("animation-duration: 25.05s", css)
-        self.assertIn("animation-iteration-count: infinite", css)
-        self.assertIn("animation-fill-mode: both", css)
-        for name in ("computer", "coffee", "planet"):
-            self.assertIn(f"@keyframes print-{name}", css)
-        for name in ("cursor-path", "cursor-click", "coffee-ripple", "moon-orbit"):
-            self.assertIn(f"@keyframes {name}", css)
-        reduced = css.split("@media (prefers-reduced-motion: reduce)", 1)[1]
-        self.assertIn(".hero-print { opacity: 0;", reduced)
-        self.assertIn(".print-computer { opacity: 1; }", reduced)
-        self.assertIn(".print-overlay { display: none; }", reduced)
         self.assertNotRegex(home, r"<(?:canvas|video|iframe)\b")
-
-    def test_photo_files(self):
-        sizes = {"computer": (640, 548), "coffee": (640, 640), "planet": (640, 480)}
-        geometry = json.loads((ROOT / "tools/hero-prints.json").read_text(encoding="utf-8"))
-        for name, size in sizes.items():
-            content = (ROOT / f"assets/images/hero-{name}.webp").read_bytes()
-            self.assertEqual(content[:4], b"RIFF")
-            self.assertEqual(content[8:16], b"WEBPVP8L", "Prints must be lossless WebP")
-            self.assertEqual(content[20], 0x2f)
-            bits = int.from_bytes(content[21:25], "little")
-            self.assertEqual(((bits & 0x3fff) + 1, ((bits >> 14) & 0x3fff) + 1), size)
-            self.assertFalse(bits & (1 << 28), "Prints must have no transparency")
-            self.assertEqual(geometry[name]["output_size"], list(size))
         css = (ROOT / "css/styles.css").read_text(encoding="utf-8")
-        self.assertIn(f'top: {geometry["coffee"]["center_percent"][1]}%', css)
-        self.assertIn(f'width: {geometry["coffee"]["radius_percent_width"] * 2:g}%', css)
-        self.assertIn(f'top: {geometry["planet"]["center_percent"][1] - 16:g}%', css)
+        self.assertIn("offset-path: ellipse(50% 50% at 50% 50%)", css)
         self.assertIn("transform: rotate(-13deg)", css)
-        self.assertIn("box-shadow: 4px 4px 0 var(--red)", css)
-        self.assertIn("box-shadow: 4px 4px 0 var(--sky)", css)
-        self.assertIn("drop-shadow(3px 3px 0 var(--red))", css)
-        self.assertIn("tools/source/", (ROOT / ".gitignore").read_text(encoding="utf-8"))
-        self.assertNotIn("source/", (ROOT / "index.html").read_text(encoding="utf-8"))
+        reduced = css.split("@media (prefers-reduced-motion: reduce)", 1)[1]
+        self.assertIn("animation: none !important", reduced)
+        self.assertNotIn("display: none", reduced)
+        self.assertIn(".orbiting-moon { offset-distance: 18%; opacity: 1; }", reduced)
+        self.assertNotIn("setInterval", (ROOT / "js/site.js").read_text(encoding="utf-8"))
 
-    def test_photo_pixels_with_offline_tools(self):
+    def test_gallery_files_metadata_and_fallback(self):
+        entries = generate.load_gallery()
+        html_text = (ROOT / "gallery.html").read_text(encoding="utf-8")
+        self.assertNotIn("statue-of-david", html_text)
+        self.assertTrue(all("statue-of-david" not in entry["file"] for entry in entries))
+        doc = Document(html_text)
+        cards = [a for t, a in doc.elements if a.get("class") == "gallery-card"]
+        self.assertEqual(len(cards), len(entries))
+        self.assertEqual([a["data-category"] for a in cards], [p["category"] for p in entries])
+        images = [a for t, a in doc.elements if t == "img" and "/gallery/" in a.get("src", "")]
+        self.assertEqual([a["alt"] for a in images], [p["alt"] for p in entries])
+        for image, entry in zip(images, entries):
+            self.assertEqual(image["loading"], "lazy")
+            self.assertEqual((int(image["width"]), int(image["height"])), (entry["width"], entry["height"]))
+            self.assertIn(entry["focus"], image["style"])
+        expected_files = {name for entry in entries for name in (
+            entry["file"], entry["file"].replace(".webp", "-full.webp"))}
+        self.assertEqual({p.name for p in (ROOT / "assets/images/gallery").iterdir()}, expected_files)
+        for path in (ROOT / "assets/images/gallery").glob("*"):
+            self.assertEqual(path.suffix, ".webp")
+            self.assertFalse(webp_info(path, metadata_free=True)["alpha"])
+        for entry in entries:
+            self.assertEqual(entry["width"], 800)
+            self.assertEqual(entry["full_width"], 1800)
+        self.assertIn("categories.length <= 1", (ROOT / "js/gallery.js").read_text(encoding="utf-8"))
+
+    def test_gallery_validation_rejects_bad_data_and_metadata(self):
+        original = generate.ROOT
+        with tempfile.TemporaryDirectory(dir=ROOT / ".checks") as temporary:
+            fixture = Path(temporary)
+            shutil.copytree(ROOT / "assets/images/gallery", fixture / "assets/images/gallery")
+            (fixture / "data").mkdir()
+            entries = copy.deepcopy(generate.load_gallery())
+            path = fixture / "data/gallery.json"
+            try:
+                generate.ROOT = fixture
+                for field, value in (("alt", ""), ("file", "../escape.webp"), ("focus", "center; color: pink"), ("width", 1)):
+                    bad = copy.deepcopy(entries)
+                    bad[0][field] = value
+                    path.write_text(json.dumps(bad), encoding="utf-8")
+                    with self.assertRaises(ValueError, msg=field):
+                        generate.load_gallery()
+                path.write_text(json.dumps(entries), encoding="utf-8")
+                image = fixture / "assets/images/gallery" / entries[0]["file"]
+                clean = image.read_bytes()
+                for kind in (b"EXIF", b"XMP ", b"ICCP", b"IPTC"):
+                    payload = b"GPS: synthetic fixture"
+                    chunk = kind + struct.pack("<I", len(payload)) + payload + (b"\0" if len(payload) % 2 else b"")
+                    body = clean[8:] + chunk
+                    image.write_bytes(b"RIFF" + struct.pack("<I", len(body)) + body)
+                    with self.assertRaisesRegex(ValueError, "metadata"):
+                        generate.load_gallery()
+                image.write_bytes(clean)
+                image.unlink()
+                with self.assertRaisesRegex(ValueError, "missing gallery image"):
+                    generate.load_gallery()
+            finally:
+                generate.ROOT = original
+
+    def test_offline_image_tools(self):
         interpreter = ROOT / "tools/.venv/Scripts/python.exe"
         if not interpreter.is_file():
             interpreter = ROOT / "tools/.venv/bin/python"
         if not interpreter.is_file():
-            if not all(importlib.util.find_spec(module) for module in ("PIL", "numpy")):
-                self.skipTest("Optional offline Pillow/NumPy tools are not installed; WebP headers checked separately")
+            if not all(importlib.util.find_spec(m) for m in ("PIL", "numpy")):
+                self.skipTest("Optional offline Pillow/NumPy environment not installed")
             interpreter = Path(sys.executable)
-        result = subprocess.run([str(interpreter), str(ROOT / "tools/make_halftone.py"), "--check"],
-                                capture_output=True, text=True, timeout=30)
+        code = r"""
+import json, sys, tempfile
+from pathlib import Path
+import numpy as np
+from PIL import Image, ImageDraw
+root=Path(sys.argv[1]);sys.path.insert(0,str(root/'tools'))
+import make_gallery
+import process_objects
+for background,foreground in ((255,100),(0,160)):
+    gray=Image.new('L',(80,80),background)
+    ImageDraw.Draw(gray).rectangle((20,20,60,60),fill=foreground)
+    alpha,removed=process_objects.remove_background(gray,Image.new('L',gray.size,255))
+    assert alpha.getpixel((0,0))==0 and alpha.getpixel((40,40))==255
+    assert removed==('white' if background==255 else 'black')
+for path in (root/'assets/images/objects').glob('*.webp'):
+    with Image.open(path) as image:
+        pixels=np.asarray(image)
+        assert image.mode=='RGBA' and max(image.size)<=900
+        assert np.array_equal(pixels[:,:,0],pixels[:,:,1]) and np.array_equal(pixels[:,:,1],pixels[:,:,2])
+        assert pixels[:,:,3].min()==0 and pixels[:,:,3].max()>0
+        assert not any(k in image.info for k in ('exif','xmp','icc_profile'))
+for path in (root/'assets/images/gallery').glob('*.webp'):
+    with Image.open(path) as image:
+        assert not image.getexif() and not any(k in image.info for k in ('exif','xmp','icc_profile'))
+with tempfile.TemporaryDirectory(dir=root/'.checks') as temp:
+    fixture=Path(temp);source=fixture/'tools/source/gallery';source.mkdir(parents=True)
+    photo=Image.new('RGB',(60,40),(255,0,0))
+    for x in range(30):
+        for y in range(20,40):photo.putpixel((x,y),(0,255,0))
+    exif=Image.Exif();exif[274]=6;exif[315]='Synthetic private tag'
+    exif[34853]={1:'N',2:(1.0,2.0,3.0)}
+    first=source/'first-photo.png';photo.save(first,exif=exif)
+    entries,removed=make_gallery.build(fixture)
+    assert entries[0]['caption']=='First photo' and entries[0]['category']=='travel'
+    assert (entries[0]['width'],entries[0]['height'])==(800,1200)
+    with Image.open(fixture/'assets/images/gallery'/entries[0]['file']) as thumb:
+        r,g,b=thumb.getpixel((100,100));assert g>240 and r<15 and b<15
+        assert not thumb.getexif() and 'exif' not in thumb.info
+    data=fixture/'data/gallery.json'
+    entries[0].update(caption='Edited caption',alt='Edited alt',focus='left top',category='food',custom={'keep':True})
+    data.write_text(json.dumps(entries),encoding='utf-8');before=data.read_bytes()
+    make_gallery.build(fixture);assert data.read_bytes()==before
+    food=source/'food';food.mkdir();photo.save(food/'second-photo.png')
+    updated,_=make_gallery.build(fixture)
+    assert len(updated)==2 and updated[0]==entries[0] and updated[1]['category']=='food'
+    first.unlink();retained,removed=make_gallery.build(fixture)
+    assert retained==updated and removed==[entries[0]['file']]
+    excluded=source/'excluded-photo.png';photo.save(excluded);original=excluded.read_bytes()
+    exclusions=fixture/'tools/gallery-exclusions.json'
+    exclusions.write_text(json.dumps(['travel-excluded-photo.webp']),encoding='utf-8')
+    after,_=make_gallery.build(fixture)
+    assert after==retained and excluded.read_bytes()==original
+    assert not (fixture/'assets/images/gallery/travel-excluded-photo.webp').exists()
+    assert not (fixture/'assets/images/gallery/travel-excluded-photo-full.webp').exists()
+    for invalid in ({},['../escape.webp'],[123]):
+        exclusions.write_text(json.dumps(invalid),encoding='utf-8')
+        try:make_gallery.build(fixture)
+        except ValueError:pass
+        else:raise AssertionError('Invalid exclusions accepted')
+print('Decoded all pixels; orientation, metadata stripping, edited entries, additions and removals verified.')
+"""
+        result = subprocess.run([str(interpreter), "-c", code, str(ROOT)], capture_output=True, text=True, timeout=90)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-
     def test_no_pictographic_characters(self):
         errors = [f"{p.relative_to(ROOT)}: {error}" for p in source_files()
                   for error in pictograph_errors(p.read_text(encoding="utf-8"))]
@@ -246,6 +335,11 @@ class SiteChecks(unittest.TestCase):
             if path.suffix == ".svg":
                 errors.extend(f"{path.relative_to(ROOT)}: {e}" for e in svg_palette_errors(text))
             elif path.suffix == ".html":
+                for style in re.findall(r"<style[^>]*>(.*?)</style>", text, flags=re.S):
+                    errors.extend(f"{path.relative_to(ROOT)}: {e}" for e in css_palette_errors(style))
+                for _, attrs in Document(text).elements:
+                    if "style" in attrs:
+                        errors.extend(f"{path.relative_to(ROOT)}: {e}" for e in css_palette_errors(attrs["style"]))
                 for inline in re.findall(r"<svg\b.*?</svg>", text, flags=re.S):
                     errors.extend(f"{path.relative_to(ROOT)}: {e}" for e in svg_palette_errors(inline))
         self.assertEqual(errors, [], "\n" + "\n".join(errors))
@@ -260,7 +354,7 @@ class SiteChecks(unittest.TestCase):
         for color in ("#808080", "#123", "#12345678", "gray", "rgb(0 0 0 / .2)", "hsl(0 0% 50%)", "color(srgb 0 0 0)"):
             self.assertTrue(css_palette_errors(f".example {{ background: {color}; }}"), color)
             self.assertTrue(svg_palette_errors(f'<svg xmlns="http://www.w3.org/2000/svg"><path fill="{color}"/></svg>'), color)
-        for color in ("white", "#fff", "#2f4bcb", "#2F4BCB22", "rgba(28,42,90,.15)", "rgb(47 75 203 / 25%)", "transparent", "#2F4BCB !important"):
+        for color in ("white", "#fff", "#d8d1c5", "#D8D1C522", "rgba(255,255,255,.15)", "rgb(11 11 11 / 25%)", "transparent", "#F2EEE6 !important"):
             self.assertFalse(color_errors(color), color)
         self.assertTrue(css_palette_errors(".example { --bad: pink; color: var(--bad); }"))
         self.assertTrue(css_palette_errors(".example { color: var(--missing, brown); }"))
@@ -289,31 +383,33 @@ class SiteChecks(unittest.TestCase):
             finally:
                 globals()["ROOT"] = original_root
 
-    def test_retro_artwork(self):
-        icons = list((ROOT / "assets/icons").glob("*.svg"))
-        self.assertEqual(len(icons), 12)
-        self.assertEqual(list((ROOT / "assets/stickers").glob("*.svg")), [])
-        for path in icons:
-            svg = ET.parse(path).getroot()
-            self.assertEqual(svg.attrib["viewBox"], "0 0 64 64")
-            self.assertEqual(len(svg.findall(".//{*}text")), 0, path.name)
-            self.assertEqual(len(svg.findall(".//*[@fill='#D93F22']")), 1, path.name)
-            if path.stem != "brand-starburst":
-                self.assertTrue(svg.findall(".//{*}pattern"), path.name)
-                self.assertTrue(any(e.attrib.get("stroke", svg.attrib.get("stroke")) == "#2F4BCB"
-                                    and e.attrib.get("stroke-width", svg.attrib.get("stroke-width")) == "3" for e in svg.iter()))
-            ids = {e.attrib["id"] for e in svg.iter() if "id" in e.attrib}
-            for element in svg.iter():
-                self.assertNotIn(element.tag.rsplit("}", 1)[-1], {"script", "foreignObject", "image"})
-                for value in element.attrib.values():
-                    for reference in re.findall(r"url\(#([^)]+)\)", value):
-                        self.assertIn(reference, ids)
-        self.assertEqual([p["graphic"] for p in generate.load_projects()], [
-            "assets/icons/popcorn.svg", "assets/icons/fork-plate.svg", "assets/icons/ticket.svg", "assets/icons/map-pin.svg",
-        ])
+    def test_film_assets_and_no_deleted_references(self):
+        for name in ("laptop", "coffee", "camera", "stamp", "saturn", "moon"):
+            path = ROOT / f"assets/images/objects/{name}.webp"
+            info = webp_info(path, metadata_free=True)
+            self.assertTrue(info["alpha"], name)
+            self.assertLessEqual(max(info["width"], info["height"]), 900)
+        self.assertEqual(list((ROOT / "assets/icons").glob("*")), [])
+        self.assertEqual(list((ROOT / "assets/graphics").glob("*")), [])
+        grain = ET.parse(ROOT / "assets/textures/film-grain.svg")
+        self.assertEqual(len(grain.findall(".//{*}feTurbulence")), 1)
+        self.assertEqual(grain.find(".//{*}feColorMatrix").attrib["values"], "0")
         css = (ROOT / "css/styles.css").read_text(encoding="utf-8")
-        self.assertNotRegex(css, r"(?:linear|radial|conic)-gradient\(|\bblur\(")
-
+        for value in ('position: fixed', 'opacity: .055', 'pointer-events: none', 'mix-blend-mode: soft-light'):
+            self.assertIn(value, css)
+        for match in re.finditer(r'url\(["\']?([^)"\']+)["\']?\)', css):
+            url = match[1]
+            if urlsplit(url).scheme or url.startswith("#"):
+                continue
+            self.assertTrue((ROOT / "css" / unquote(url)).resolve().is_file(), url)
+        result = subprocess.run(["git", "-C", str(ROOT), "diff", "--name-only", "--diff-filter=D", "HEAD"],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        deleted = [line for line in result.stdout.splitlines() if line]
+        for path in source_files():
+            text = path.read_text(encoding="utf-8")
+            for name in deleted:
+                self.assertNotIn(name, text, f"{path.relative_to(ROOT)} references deleted {name}")
     def test_home_sections_and_exact_copy(self):
         home = (ROOT / "index.html").read_text(encoding="utf-8")
         self.assertEqual(re.findall(r"<section[^>]*aria-labelledby=\"([^\"]+)\"", home), [
@@ -328,25 +424,34 @@ class SiteChecks(unittest.TestCase):
             "On campus, I co-lead Columbia's INFORMS chapter, serve on Engineering Student Council, and connect students with New York's food community through Gourmand. Outside of work, I enjoy food and restaurant reviews, photography, travel, Pilates, golf, and hiking.",
         ])
         self.assertNotIn("<a ", about)
-        portrait = re.search(r'<figure class="polaroid">.*?</figure>', home, re.S)[0]
-        self.assertNotIn("figcaption", portrait)
-        self.assertIn('src="assets/images/vanessa-glowczewski.jpg"', portrait)
-        self.assertIn('id="currently-title">Currently…', home)
-        self.assertIn('data-limit="3"', home)
+        self.assertNotIn("assets/images/vanessa-glowczewski.jpg", home)
+        self.assertNotIn('class="polaroid"', home)
+        self.assertNotIn('class="about-personal"', home)
+        self.assertNotIn('class="about-layout"', home)
+        self.assertNotIn("currently-title", home)
+        self.assertNotIn('class="sticky-note"', home)
+        self.assertNotIn("data-project-grid", home)
+        self.assertNotIn("js/projects.js", home)
+        work = re.search(r'<section[^>]*id="selected-work".*?</section>', home, re.S)[0]
+        self.assertNotIn("project-card", work)
+        self.assertEqual(plain_text(re.search(r'<p class="projects-blurb">(.*?)</p>', work, re.S)[1]),
+            "I'm interested in studying artificial intelligence (AI engineering), and I'm equally drawn to business. Through my economics courses, I explore how companies can stay competitive and develop strategies that adapt to an ever-changing world.")
+        self.assertIn('href="projects.html"', work)
+        self.assertIn('<body class="home-page">', home)
         interests = re.findall(r'<article class="interest-card">(.*?)</article>', home, re.S)
         self.assertEqual(len(interests), 3)
         self.assertEqual([plain_text(re.search(r"<p>(.*?)</p>", card)[1]) for card in interests], [
             "I'm learning Spanish and have taken Spanish Pragmatics and Advanced Spanish through Columbia's LAIC department.",
-            "I'm fascinated by space, especially space exploration and the search for alien life.",
-            "I love classics. Favorites include War and Peace, Dracula, Jane Eyre, and And Then There Were None.",
+            "I'm fascinated by space, especially space exploration and the search for other life.",
+            "I love classics. Favorites include Pride and Prejudice, Dracula, Jane Eyre, and And Then There Were None.",
         ])
-        for number, (card, title, graphic) in enumerate(zip(interests, ("Spanish", "Space", "Literature"), ("speech-bubble", "ringed-planet", "open-book")), 1):
+        for number, (card, title) in enumerate(zip(interests, ("Spanish", "Space", "Literature")), 1):
             self.assertIn(f"<h3>{title}</h3>", card)
-            self.assertIn(f'src="assets/icons/{graphic}.svg"', card)
-            self.assertIn(f'<span class="label interest-number">{number:02}</span>', card)
+            self.assertNotRegex(card, r"<img\b")
+            self.assertIn(f'<span class="interest-number">{number:02}</span>', card)
             self.assertNotRegex(card, r"<a\b")
         self.assertEqual(re.findall(r"<em>(.*?)</em>", interests[2]), [
-            "War and Peace", "Dracula", "Jane Eyre", "And Then There Were None",
+            "Pride and Prejudice", "Dracula", "Jane Eyre", "And Then There Were None",
         ])
         strip = home.split('id="get-in-touch"', 1)[1].split("</section>", 1)[0]
         self.assertIn("Get in touch.</h2>", strip)
@@ -398,35 +503,24 @@ class SiteChecks(unittest.TestCase):
     def test_palette_contrast(self):
         css = (ROOT / "css/styles.css").read_text(encoding="utf-8")
         palette = dict(re.findall(r"--([\w-]+):\s*(#[0-9A-Fa-f]{6});", css))
-        expected = {
-            "cobalt": "#2F4BCB", "navy": "#1C2A5A", "sky": "#CFE3F7",
-            "paper": "#F4F2EE", "white": "#FFFFFF", "red": "#D93F22",
-        }
-        for name, value in expected.items():
-            self.assertEqual(palette[name].upper(), value)
-        self.assertIn("--frame: 1.5px solid var(--navy);", css)
+        expected = {"black":"#0B0B0B","charcoal":"#121212","surface":"#1A1A1A","line":"#2A2A2A",
+                    "muted":"#8C8C8C","warm-gray":"#BDB8AE","beige":"#D8D1C5","off-white":"#F2EEE6","white":"#FFFFFF"}
+        self.assertEqual(palette, expected)
 
         def luminance(color):
-            rgb = [int(color[i:i + 2], 16) / 255 for i in (1, 3, 5)]
-            return sum(
-                (x / 12.92 if x <= .04045 else ((x + .055) / 1.055) ** 2.4) * weight
-                for x, weight in zip(rgb, (.2126, .7152, .0722))
-            )
+            channels = [int(color[i:i+2],16)/255 for i in (1,3,5)]
+            return sum((c/12.92 if c<=.04045 else ((c+.055)/1.055)**2.4)*w for c,w in zip(channels,(.2126,.7152,.0722)))
 
-        for foreground, background in (
-            ("navy", "paper"), ("navy", "sky"), ("cobalt", "paper"),
-            ("cobalt", "sky"), ("white", "cobalt"), ("paper", "navy"),
-            ("sky", "navy"),
-        ):
-            with self.subTest(foreground=foreground, background=background):
-                a, b = luminance(palette[foreground]), luminance(palette[background])
-                self.assertGreaterEqual((max(a, b) + .05) / (min(a, b) + .05), 4.5)
-        # Worst case under a grain dot, not merely the untouched paper average.
-        grain_paper = "#" + "".join(f"{round(int(palette['paper'][i:i + 2], 16) * .945 + int(palette['cobalt'][i:i + 2], 16) * .055):02X}" for i in (1, 3, 5))
-        for foreground in ("navy", "cobalt"):
-            a, b = luminance(palette[foreground]), luminance(grain_paper)
-            self.assertGreaterEqual((max(a, b) + .05) / (min(a, b) + .05), 4.5)
-
+        # AA at the brightest possible soft-light grain sample, not the average.
+        for background in ("black","charcoal","surface"):
+            rgb = [int(palette[background][i:i+2],16)/255 for i in (1,3,5)]
+            grain = [c+.055*((((16*c-12)*c+4)*c if c<=.25 else c**.5)-c) for c in rgb]
+            bright = "#"+"".join(f"{round(c*255):02X}" for c in grain)
+            for foreground in ("muted","warm-gray","beige","off-white","white"):
+                a,b=luminance(palette[foreground]),luminance(bright)
+                self.assertGreaterEqual((max(a,b)+.05)/(min(a,b)+.05),4.5,(foreground,background))
+        a,b=luminance(palette["black"]),luminance(palette["beige"])
+        self.assertGreaterEqual((b+.05)/(a+.05),4.5)
     def test_resume_is_not_publicly_downloadable(self):
         pages = list(ROOT.glob("*.html")) + list((ROOT / "projects").glob("*.html"))
         for page in pages:
@@ -467,7 +561,7 @@ class SiteChecks(unittest.TestCase):
         self.assertNotIn("TODO: Dates", experience)
         portrait = ROOT / "assets/images/vanessa-glowczewski.jpg"
         self.assertTrue(portrait.read_bytes().startswith(b"\xff\xd8\xff"))
-        self.assertIn('alt="Vanessa Glowczewski smiling in a navy blazer."', (ROOT / "index.html").read_text(encoding="utf-8"))
+        self.assertNotIn('src="assets/images/vanessa-glowczewski.jpg"', (ROOT / "index.html").read_text(encoding="utf-8"))
 
     def test_project_data_and_generated_content(self):
         for project in generate.load_projects():
@@ -549,7 +643,7 @@ class SiteChecks(unittest.TestCase):
 
     def test_pages_and_internal_links(self):
         files = list(ROOT.glob("*.html")) + list((ROOT / "projects").glob("*.html"))
-        self.assertEqual(len(files), 4 + len(generate.load_projects()))
+        self.assertEqual(len(files), 5 + len(generate.load_projects()))
         for file in files:
             with self.subTest(page=file.name):
                 text = file.read_text(encoding="utf-8")
@@ -566,9 +660,9 @@ class SiteChecks(unittest.TestCase):
                 self.assertTrue(any(t == "html" and a.get("lang") == "en" for t, a in doc.elements))
                 self.assertTrue(any(t == "a" and a.get("class") == "skip-link" for t, a in doc.elements))
                 nav = re.search(r'<nav class="site-nav".*?</nav>', text, re.S)[0]
-                self.assertEqual([plain_text(a).replace("\xa0", " ").removesuffix(" ↗").strip() for a in re.findall(r"<a[^>]*>(.*?)</a>", nav)], ["Home", "Experience", "Projects", "Contact"])
+                self.assertEqual([plain_text(a).replace("\xa0", " ").removesuffix(" ↗").strip() for a in re.findall(r"<a[^>]*>(.*?)</a>", nav)], ["Home", "Experience", "Projects", "Gallery", "Contact"])
                 nav_links = [attrs["href"].split("/")[-1] for tag, attrs in Document(nav).elements if tag == "a"]
-                self.assertEqual(nav_links, ["index.html", "experience.html", "projects.html", "contact.html"])
+                self.assertEqual(nav_links, ["index.html", "experience.html", "projects.html", "gallery.html", "contact.html"])
                 for tag, attrs in doc.elements:
                     for reference in ("aria-labelledby", "aria-controls"):
                         for identifier in attrs.get(reference, "").split():
@@ -592,7 +686,7 @@ class SiteChecks(unittest.TestCase):
         doc = ET.parse(ROOT / "sitemap.xml")
         locations = [node.text for node in doc.findall(".//{*}loc")]
         projects = generate.load_projects()
-        self.assertEqual(len(locations), 4 + len(projects))
+        self.assertEqual(len(locations), 5 + len(projects))
         for project in projects:
             self.assertTrue(any(url.endswith(f'/projects/{project["slug"]}.html') for url in locations))
 
@@ -603,7 +697,7 @@ class SiteChecks(unittest.TestCase):
             fixture = Path(temporary)
             for folder in ("assets", "data", "templates"):
                 shutil.copytree(ROOT / folder, fixture / folder)
-            for page in ("index.html", "experience.html", "projects.html", "contact.html"):
+            for page in ("index.html", "experience.html", "projects.html", "gallery.html", "contact.html"):
                 shutil.copy2(ROOT / page, fixture / page)
             original_root = generate.ROOT
             try:
@@ -645,10 +739,10 @@ class SiteChecks(unittest.TestCase):
                     generate.load_projects()
                 projects[-1]["note"] = ""
                 graphic = projects[-1]["graphic"]
-                for invalid in ("https://example.com/icon.svg", "assets/icons/../../README.md", "assets/icons/missing.svg"):
+                for invalid in ("https://example.com/icon.svg", "assets/../../README.md", "assets/missing.svg"):
                     projects[-1]["graphic"] = invalid
                     (fixture / "data/projects.json").write_text(json.dumps(projects), encoding="utf-8")
-                    with self.assertRaisesRegex(ValueError, "graphic must be a local SVG"):
+                    with self.assertRaisesRegex(ValueError, "graphic must be empty"):
                         generate.load_projects()
                 projects[-1]["graphic"] = graphic
                 projects[-1]["slug"] = "../unsafe"

@@ -11,7 +11,7 @@ function node(tag, className, text) {
 }
 
 function projectCard(project, index) {
-  const article = node("article", `project-card${index === 0 ? " is-taped" : ""}`);
+  const article = node("article", "project-card");
   article.dataset.tags = project.tags.join("|");
   const thumb = node("div", "project-thumb");
   const image = project.images[0];
@@ -30,16 +30,12 @@ function projectCard(project, index) {
     placeholder.setAttribute("aria-hidden", "true");
     thumb.append(placeholder);
   }
+  const frame = node("span", "frame-number", `► ${String(index + 1).padStart(2, "0")}A`);
+  frame.setAttribute("aria-hidden", "true");
+  thumb.append(frame);
   const info = node("div", "project-info");
   const meta = node("div", "project-meta");
   meta.append(node("span", "label", `PROJECT / ${String(index + 1).padStart(2, "0")}`));
-  const graphic = node("img", "project-graphic");
-  graphic.src = new URL(project.graphic, root);
-  graphic.alt = "";
-  graphic.width = 48;
-  graphic.height = 48;
-  graphic.setAttribute("aria-hidden", "true");
-  meta.append(graphic);
   const heading = node("h3");
   const link = node("a", "", project.title);
   link.href = new URL(`projects/${encodeURIComponent(project.slug)}.html`, root);

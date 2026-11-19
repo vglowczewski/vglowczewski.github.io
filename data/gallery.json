@@ -1,0 +1,145 @@
+[
+  {
+    "file": "travel-copenhagen-castle-kitchen.webp",
+    "category": "travel",
+    "caption": "Copenhagen castle kitchen",
+    "alt": "Copenhagen castle kitchen",
+    "focus": "center",
+    "width": 800,
+    "height": 1067,
+    "full_width": 1800,
+    "full_height": 2400
+  },
+  {
+    "file": "travel-interlaken-parachuter.webp",
+    "category": "travel",
+    "caption": "Interlaken parachuter",
+    "alt": "Interlaken parachuter",
+    "focus": "center",
+    "width": 800,
+    "height": 1067,
+    "full_width": 1800,
+    "full_height": 2400
+  },
+  {
+    "file": "travel-lake-lucerne-swan.webp",
+    "category": "travel",
+    "caption": "Lake lucerne swan",
+    "alt": "Lake lucerne swan",
+    "focus": "center",
+    "width": 800,
+    "height": 1067,
+    "full_width": 1800,
+    "full_height": 2400
+  },
+  {
+    "file": "travel-milan-pinacoteca-di-brera.webp",
+    "category": "travel",
+    "caption": "Milan pinacoteca di brera",
+    "alt": "Milan pinacoteca di brera",
+    "focus": "center",
+    "width": 800,
+    "height": 1067,
+    "full_width": 1800,
+    "full_height": 2400
+  },
+  {
+    "file": "travel-milan-sforzesco-castle.webp",
+    "category": "travel",
+    "caption": "Milan sforzesco castle",
+    "alt": "Milan sforzesco castle",
+    "focus": "center",
+    "width": 800,
+    "height": 1067,
+    "full_width": 1800,
+    "full_height": 2400
+  },
+  {
+    "file": "travel-oxford-meadows.webp",
+    "category": "travel",
+    "caption": "Oxford meadows",
+    "alt": "Oxford meadows",
+    "focus": "center",
+    "width": 800,
+    "height": 1067,
+    "full_width": 1800,
+    "full_height": 2400
+  },
+  {
+    "file": "travel-oxford-radcliffe-square.webp",
+    "category": "travel",
+    "caption": "Oxford radcliffe square",
+    "alt": "Oxford radcliffe square",
+    "focus": "center",
+    "width": 800,
+    "height": 1067,
+    "full_width": 1800,
+    "full_height": 2400
+  },
+  {
+    "file": "travel-rome-river-tiber.webp",
+    "category": "travel",
+    "caption": "Rome river tiber",
+    "alt": "Rome river tiber",
+    "focus": "center",
+    "width": 800,
+    "height": 1067,
+    "full_width": 1800,
+    "full_height": 2400
+  },
+  {
+    "file": "travel-rome-tree-lined-street.webp",
+    "category": "travel",
+    "caption": "Rome tree lined street",
+    "alt": "Rome tree lined street",
+    "focus": "center",
+    "width": 800,
+    "height": 1067,
+    "full_width": 1800,
+    "full_height": 2400
+  },
+  {
+    "file": "travel-scottsdale-camelback-mountain.webp",
+    "category": "travel",
+    "caption": "Scottsdale camelback mountain",
+    "alt": "Scottsdale camelback mountain",
+    "focus": "center",
+    "width": 800,
+    "height": 1067,
+    "full_width": 1800,
+    "full_height": 2400
+  },
+  {
+    "file": "travel-seoul-gyeongbokgung-palace.webp",
+    "category": "travel",
+    "caption": "Seoul gyeongbokgung palace",
+    "alt": "Seoul gyeongbokgung palace",
+    "focus": "center",
+    "width": 800,
+    "height": 677,
+    "full_width": 1800,
+    "full_height": 1524
+  },
+  {
+    "file": "travel-seoul-gyeongbokgung-roof.webp",
+    "category": "travel",
+    "caption": "Seoul gyeongbokgung roof",
+    "alt": "Seoul gyeongbokgung roof",
+    "focus": "center",
+    "width": 800,
+    "height": 1067,
+    "full_width": 1800,
+    "full_height": 2400
+  },
+  {
+    "file": "travel-zurich-clocktower.webp",
+    "category": "travel",
+    "caption": "Zurich clocktower",
+    "alt": "Zurich clocktower",
+    "focus": "center",
+    "width": 800,
+    "height": 1066,
+    "full_width": 1800,
+    "full_height": 2398
+  }
+]

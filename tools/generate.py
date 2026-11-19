@@ -1,4 +1,4 @@
-"""Regenerate static project pages and sitemap. Python standard library only."""
+"""Regenerate project pages, gallery fallback, and sitemap. Standard library only."""
 import argparse
 import html
 import json
@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 from string import Template
 from urllib.parse import urlsplit
+from media import webp_info
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED = {
@@ -33,12 +34,10 @@ def load_projects():
             raise ValueError(f"Invalid or duplicate slug: {slug}")
         slugs.add(slug)
         for field in REQUIRED - {"tags", "images", "links"}:
-            if not isinstance(project[field], str) or (field != "year" and not project[field].strip()):
-                raise ValueError(f"{slug}: {field} must be a string, and only year may be empty.")
-        graphic = project["graphic"]
-        icon_path = (ROOT / graphic).resolve()
-        if not graphic.startswith("assets/icons/") or icon_path.suffix != ".svg" or not icon_path.is_relative_to(ROOT / "assets/icons") or not icon_path.is_file():
-            raise ValueError(f"{slug}: graphic must be a local SVG inside assets/icons/.")
+            if not isinstance(project[field], str) or (field not in {"year", "graphic"} and not project[field].strip()):
+                raise ValueError(f"{slug}: {field} must be a string; only year and graphic may be empty.")
+        if project["graphic"]:
+            raise ValueError(f"{slug}: graphic must be empty; cards no longer use corner artwork.")
         if not isinstance(project.get("note", ""), str):
             raise ValueError(f"{slug}: note must be plain text.")
         if not project["tags"] or not set(project["tags"]).issubset(TAGS):
@@ -59,6 +58,60 @@ def load_projects():
             if not image.get("alt") or not all(isinstance(image.get(key), int) and image[key] > 0 for key in ("width", "height")):
                 raise ValueError(f"{slug}: images need alt text and positive integer dimensions.")
     return projects
+
+
+def valid_focus(value):
+    if not isinstance(value, str):
+        return False
+    tokens = value.split()
+    return 1 <= len(tokens) <= 4 and all(
+        token in {"center", "left", "right", "top", "bottom"}
+        or bool(re.fullmatch(r"(?:\d{1,3}(?:\.\d+)?|\.\d+)%", token)) and 0 <= float(token[:-1]) <= 100
+        for token in tokens
+    )
+
+
+def load_gallery():
+    entries = json.loads((ROOT / "data/gallery.json").read_text(encoding="utf-8"))
+    if not isinstance(entries, list):
+        raise ValueError("gallery.json must contain an array.")
+    files = set()
+    for entry in entries:
+        file = entry.get("file", "")
+        if not isinstance(file, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*\.webp", file) or file in files:
+            raise ValueError("Gallery files must be unique local WebP filenames.")
+        files.add(file)
+        for field in ("category", "caption", "alt"):
+            if not isinstance(entry.get(field), str) or not entry[field].strip():
+                raise ValueError(f"{file}: gallery {field} must be nonempty text.")
+        if not re.fullmatch(r"[a-z][a-z0-9-]*", entry["category"]):
+            raise ValueError(f"{file}: invalid category.")
+        if not valid_focus(entry.get("focus")):
+            raise ValueError(f"{file}: invalid focus position.")
+        for suffix, width_key, height_key in (("", "width", "height"), ("-full", "full_width", "full_height")):
+            path = ROOT / "assets/images/gallery" / (Path(file).stem + suffix + ".webp")
+            if not path.is_file():
+                raise ValueError(f"{file}: missing gallery image {path.name}.")
+            for key in (width_key, height_key):
+                if not isinstance(entry.get(key), int) or isinstance(entry[key], bool) or entry[key] <= 0:
+                    raise ValueError(f"{file}: {key} must be a positive integer.")
+            info = webp_info(path, metadata_free=True)
+            if (info["width"], info["height"]) != (entry[width_key], entry[height_key]):
+                raise ValueError(f"{file}: dimensions do not match {path.name}.")
+    return entries
+
+
+def gallery_figure(entry):
+    file = escape(entry["file"])
+    full = escape(Path(entry["file"]).stem + "-full.webp")
+    return (
+        f'<figure class="gallery-card" data-category="{escape(entry["category"])}">'
+        f'<a class="gallery-photo" href="assets/images/gallery/{full}">'
+        f'<img src="assets/images/gallery/{file}" alt="{escape(entry["alt"])}" '
+        f'width="{entry["width"]}" height="{entry["height"]}" loading="lazy" decoding="async" '
+        f'style="object-position: {escape(entry["focus"])}"></a>'
+        f'<figcaption class="gallery-caption">{escape(entry["caption"])}</figcaption></figure>'
+    )
 
 
 def figure(image, eager=False):
@@ -90,6 +143,7 @@ def site_meta(site_url, path, include_preview=True):
 
 def generate(site_url=None):
     projects = load_projects()
+    gallery = load_gallery()
     # Preserve the deployment URL on subsequent plain runs.
     if not site_url and (ROOT / "sitemap.xml").exists():
         match = re.search(r"<loc>(https://[^<]+?)/index\.html</loc>", (ROOT / "sitemap.xml").read_text(encoding="utf-8"))
@@ -129,9 +183,16 @@ def generate(site_url=None):
     if count != 1:
         raise ValueError("projects.html must contain exactly one generated project-index marker.")
     index_path.write_text(index, encoding="utf-8", newline="\n")
+    gallery_path = ROOT / "gallery.html"
+    content = gallery_path.read_text(encoding="utf-8")
+    fallback = "<!-- GALLERY_INDEX_START -->\n        " + "\n        ".join(gallery_figure(entry) for entry in gallery) + "\n        <!-- GALLERY_INDEX_END -->"
+    content, count = re.subn(r"<!-- GALLERY_INDEX_START -->.*?<!-- GALLERY_INDEX_END -->", lambda _: fallback, content, flags=re.S)
+    if count != 1:
+        raise ValueError("gallery.html must contain exactly one generated gallery-index marker.")
+    gallery_path.write_text(content, encoding="utf-8", newline="\n")
 
     base = site_url or "https://example.com"
-    pages = ["index.html", "experience.html", "projects.html", "contact.html"]
+    pages = ["index.html", "experience.html", "projects.html", "gallery.html", "contact.html"]
     paths = pages + [f'projects/{p["slug"]}.html' for p in projects]
     urls = "\n".join(f"  <url><loc>{escape(base + '/' + path)}</loc></url>" for path in paths)
     sitemap_comment = "Generated by tools/generate.py." if site_url else "TODO: Set the final domain with tools/generate.py before publishing."
@@ -157,7 +218,7 @@ def generate(site_url=None):
             else:
                 content = content.replace("</head>", "  " + marker + "\n</head>", 1)
             path.write_text(content, encoding="utf-8", newline="\n")
-    print(f"Generated {len(projects)} project pages, the accessible index, sitemap.xml, and robots.txt.")
+    print(f"Generated {len(projects)} project pages, project index, {len(gallery)} gallery photos, sitemap.xml, and robots.txt.")
 
 
 if __name__ == "__main__":

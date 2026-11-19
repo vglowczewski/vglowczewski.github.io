@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" stroke="#2F4BCB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-  <defs><pattern id="dots" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".7" fill="#2F4BCB" stroke="none" opacity=".3"/></pattern></defs>
-  <path d="M7 26V13h18l8 8h23v30H7Z" fill="#CFE3F7"/>
-  <path d="M7 26h51l-5 26H11Z" fill="#FFFFFF"/>
-  <path d="M11 41h44l-2 11H13Z" fill="url(#dots)" stroke="none"/>
-  <path d="M18 33h18"/>
-  <circle cx="47" cy="14" r="4" fill="#D93F22" stroke="none"/>
-</svg>
